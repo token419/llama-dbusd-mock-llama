@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>llama.cpp Mock Server</title>
+  <script>
+    (function() {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <style>
+    :root, html[data-theme="dark"] {
+      --bg: #222222;
+      --card-bg: #2d2d2d;
+      --header-bg: #181818;
+      --input-bg: #1c1c1c;
+      --text: #ececec;
+      --subtext: #a0a0a0;
+      --accent: #d4d4d4;
+      --border: #3e3e3e;
+      --btn-bg: #444444;
+      --btn-hover: #525252;
+      --bubble-user: #444444;
+      --bubble-asst: #222222;
+      --bubble-sys: #262626;
+      --green: #81c784;
+      --hp-bar: #e57373;
+      --hp-fill: #d32f2f;
+      --mp-bar: #64b5f6;
+      --mp-fill: #1976d2;
+    }
+    html[data-theme="light"] {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --header-bg: #e5e7eb;
+      --input-bg: #ffffff;
+      --text: #111827;
+      --subtext: #4b5563;
+      --accent: #111827;
+      --border: #d1d5db;
+      --btn-bg: #e5e7eb;
+      --btn-hover: #d1d5db;
+      --bubble-user: #2563eb;
+      --bubble-asst: #f3f4f6;
+      --bubble-sys: #e5e7eb;
+      --green: #16a34a;
+      --hp-bar: #fca5a5;
+      --hp-fill: #dc2626;
+      --mp-bar: #93c5fd;
+      --mp-fill: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: var(--subtext);
+      border-top: 1px solid var(--border);
+      background: var(--header-bg);
+      flex-shrink: 0;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* CRT SCANLINE & VIGNETTE OVERLAY IN DICK/GAME MODE */
+    body.game-active, body.dick-active {
+      font-family: 'Courier New', Courier, monospace !important;
+    }
+    html[data-theme="dark"] body.game-active,
+    html[data-theme="dark"] body.dick-active {
+      background: #080d08 !important;
+      color: #33ff33 !important;
+      text-shadow: 0 0 6px rgba(51, 255, 51, 0.75);
+    }
+    html[data-theme="light"] body.game-active,
+    html[data-theme="light"] body.dick-active {
+      background: #f4f6f0 !important;
+      color: #14532d !important;
+      text-shadow: none;
+    }
+    html[data-theme="dark"] body.game-active header,
+    html[data-theme="dark"] body.dick-active header,
+    html[data-theme="dark"] body.game-active footer,
+    html[data-theme="dark"] body.dick-active footer,
+    html[data-theme="dark"] body.game-active .card,
+    html[data-theme="dark"] body.dick-active .card,
+    html[data-theme="dark"] body.game-active .chat-history,
+    html[data-theme="dark"] body.dick-active .chat-history {
+      background: #080d08 !important;
+      border-color: #1f501f !important;
+      color: #33ff33 !important;
+      box-shadow: none !important;
+    }
+    html[data-theme="light"] body.game-active header,
+    html[data-theme="light"] body.dick-active header,
+    html[data-theme="light"] body.game-active footer,
+    html[data-theme="light"] body.dick-active footer,
+    html[data-theme="light"] body.game-active .card,
+    html[data-theme="light"] body.dick-active .card,
+    html[data-theme="light"] body.game-active .chat-history,
+    html[data-theme="light"] body.dick-active .chat-history {
+      background: #ffffff !important;
+      border-color: #16a34a !important;
+      color: #14532d !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    }
+    html[data-theme="dark"] body.game-active header h1,
+    html[data-theme="dark"] body.dick-active header h1 {
+      color: #33ff33 !important;
+      text-shadow: 0 0 8px #33ff33;
+    }
+    html[data-theme="light"] body.game-active header h1,
+    html[data-theme="light"] body.dick-active header h1 {
+      color: #14532d !important;
+      text-shadow: none;
+    }
+    html[data-theme="dark"] body.game-active footer,
+    html[data-theme="dark"] body.dick-active footer {
+      color: #1f801f !important;
+    }
+    html[data-theme="light"] body.game-active footer,
+    html[data-theme="light"] body.dick-active footer {
+      color: #15803d !important;
+    }
+
+    /* Scanlines */
+    html[data-theme="dark"] body.game-active::before,
+    html[data-theme="dark"] body.dick-active::before {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.28) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      z-index: 999;
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+    html[data-theme="light"] body.game-active::before,
+    html[data-theme="light"] body.dick-active::before {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.04) 50%);
+      z-index: 999;
+      background-size: 100% 3px;
+      pointer-events: none;
+    }
+    html[data-theme="dark"] body.game-active::after,
+    html[data-theme="dark"] body.dick-active::after {
+      content: " ";
+      display: block;
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: radial-gradient(circle at center, transparent 65%, rgba(0, 0, 0, 0.6) 100%);
+      pointer-events: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="server-meta" data-load-delay="{{LOAD_DELAY}}" data-unload-delay="{{UNLOAD_DELAY}}" style="display:none"></div>
+  <div id="app"></div>
+  <footer id="global-footer">
+    <span id="footer-delay-text">{{LOAD_DELAY}}s simulated loading • {{UNLOAD_DELAY}}s simulated unloading</span>
+  </footer>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
