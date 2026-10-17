@@ -17,7 +17,8 @@ use std::{
 };
 use tokio::sync::RwLock;
 
-const DEFAULT_BIND_ADDR: &str = "127.0.0.1:8080";
+mod cli;
+
 const DEFAULT_DELAY_SECS: u64 = 1;
 
 #[derive(Debug, Clone)]
@@ -351,17 +352,6 @@ fn clean_addr(input: &str) -> String {
         .to_string()
 }
 
-fn resolve_bind_addr() -> String {
-    if let Ok(addr) = std::env::var("LLAMA_MOCK_ADDR") {
-        let trimmed = addr.trim();
-        if !trimmed.is_empty() {
-            return clean_addr(trimmed);
-        }
-    }
-
-    DEFAULT_BIND_ADDR.to_string()
-}
-
 fn resolve_delays() -> (u64, u64) {
     let load_delay = std::env::var("LLAMA_MOCK_LOAD_DELAY")
         .ok()
@@ -378,6 +368,22 @@ fn resolve_delays() -> (u64, u64) {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let action = match cli::parse_args(std::env::args().skip(1)) {
+        Ok(action) => action,
+        Err(err) => {
+            eprintln!("{err}");
+            std::process::exit(2);
+        }
+    };
+
+    let cli_config = match action {
+        cli::CliAction::Help => {
+            print!("{}", cli::help_message());
+            std::process::exit(0);
+        }
+        cli::CliAction::Run(config) => config,
+    };
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -385,10 +391,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
-    let bind_addr = resolve_bind_addr();
     let (load_delay, unload_delay) = resolve_delays();
 
     tracing::info!(
+        server_url = %cli_config.url,
         load_delay_secs = load_delay,
         unload_delay_secs = unload_delay,
         "Configured initial simulated delays"
@@ -402,7 +408,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = create_app(state);
 
-    let addr: SocketAddr = bind_addr.parse()?;
+    let bind_addr = clean_addr(&cli_config.url);
+    let addr: SocketAddr = bind_addr.parse().map_err(|e| {
+        format!(
+            "Failed to parse bind address '{bind_addr}' from URL '{}': {e}",
+            cli_config.url
+        )
+    })?;
+
     tracing::info!(
         "Starting llama-dbusd-mock-llama listening on http://{}",
         addr

@@ -30,6 +30,7 @@
   - [Target Architecture Matrix](#target-architecture-matrix)
   - [Binary Size & Release Profile Optimizations](#binary-size--release-profile-optimizations)
   - [Compiling the Embedded Web Frontend](#compiling-the-embedded-web-frontend)
+  - [Command-Line Options](#command-line-options)
   - [Environment Configuration](#environment-configuration)
   - [Manual HTTP Verification with `curl`](#manual-http-verification-with-curl)
 - [AI Assistance Attestation](#ai-assistance-attestation)
@@ -242,14 +243,15 @@ cargo clippy --all-targets -- -D warnings
 ### Automated Test Coverage
 
 The included test suite exercises:
-1. **`test_clean_addr_parsing`**: Verifies URL cleanup (`http://`, trailing slashes) for robust bind address parsing.
-2. **`test_health_endpoint`**: Asserts `GET /health` responds with `{"status":"ok"}`.
-3. **`test_models_list_initial`**: Validates default model inventory and initial `unloaded` statuses.
-4. **`test_load_and_unload_lifecycle`**: Measures artificial latency thresholds and verifies model status transitions.
-5. **`test_runtime_delay_updates`**: Validates dynamic delay modifications via `/mock/loaddelay` and `/mock/unloaddelay`.
-6. **`test_unknown_model_error`**: Ensures `400 Bad Request` responses for uncataloged model IDs.
-7. **`test_root_serves_html_with_theme_toggle_and_delays`**: Confirms embedded frontend delivery with dynamic metadata injection.
-8. **`test_undefined_route_returns_404_html`**: Ensures undefined paths return HTTP 404 with styled fallback content.
+1. **POSIX CLI Flag & Argument Parsing Suite**: Comprehensive verification of `--url`, `-u`, `--url=<URL>`, `-u<URL>`, bundled `-hu`, `--` delimiter, error diagnostics, and precedence over environment variables.
+2. **`test_clean_addr_parsing`**: Verifies URL cleanup (`http://`, trailing slashes) for robust bind address parsing.
+3. **`test_health_endpoint`**: Asserts `GET /health` responds with `{"status":"ok"}`.
+4. **`test_models_list_initial`**: Validates default model inventory and initial `unloaded` statuses.
+5. **`test_load_and_unload_lifecycle`**: Measures artificial latency thresholds and verifies model status transitions.
+6. **`test_runtime_delay_updates`**: Validates dynamic delay modifications via `/mock/loaddelay` and `/mock/unloaddelay`.
+7. **`test_unknown_model_error`**: Ensures `400 Bad Request` responses for uncataloged model IDs.
+8. **`test_root_serves_html_with_theme_toggle_and_delays`**: Confirms embedded frontend delivery with dynamic metadata injection.
+9. **`test_undefined_route_returns_404_html`**: Ensures undefined paths return HTTP 404 with styled fallback content.
 
 ---
 
@@ -303,13 +305,34 @@ cd ..
 
 The compiled bundle is output to `static/index.html` and embedded into the Rust executable at compile time via `include_str!`.
 
+### Command-Line Options
+
+`llama-dbusd-mock-llama` provides POSIX-compliant argument parsing:
+
+```text
+Usage: llama-dbusd-mock-llama [OPTIONS]
+
+Lightweight mock server mimicking llama.cpp server for llama-dbusd testing.
+
+Options:
+  -u, --url <URL>    Server listen URL [default: http://127.0.0.1:8080] [env: LLAMA_MOCK_URL]
+  -h, --help         Print help information
+```
+
+| Flag | Long Flag | Description | Default |
+| :--- | :--- | :--- | :--- |
+| `-u <URL>` | `--url <URL>` | Server listen URL (overrides `LLAMA_MOCK_URL`) | `http://127.0.0.1:8080` |
+| `-h` | `--help` | Print help information and exit | |
+
+Flag syntax supports standard POSIX and GNU conventions (e.g. `-u http://127.0.0.1:8080`, `-uhttp://127.0.0.1:8080`, `--url=http://127.0.0.1:8080`, bundled `-hu`, and `--` option delimiter).
+
 ### Environment Configuration
 
 The server supports configuration via environment variables:
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
-| `LLAMA_MOCK_ADDR` | `127.0.0.1:8080` | Bind address (`host:port` or URL format) for the mock HTTP service. |
+| `LLAMA_MOCK_URL` | `http://127.0.0.1:8080` | Server listen URL (`http://host:port` or `host:port`). |
 | `LLAMA_MOCK_LOAD_DELAY` | `1` | Artificial model loading latency in seconds. |
 | `LLAMA_MOCK_UNLOAD_DELAY` | `1` | Artificial model unloading latency in seconds. |
 | `RUST_LOG` | `info` | Logging verbosity filter (e.g., `debug`, `llama_dbusd_mock_llama=trace`, `warn`). |

@@ -1,6 +1,6 @@
 [package]
 name = "llama-dbusd-mock-llama"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["token419"]
 description = "Lightweight mock server mimicking llama.cpp server for llama-dbusd testing"
