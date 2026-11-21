@@ -315,16 +315,16 @@ Usage: llama-dbusd-mock-llama [OPTIONS]
 Lightweight mock server mimicking llama.cpp server for llama-dbusd testing.
 
 Options:
-  -u, --url <URL>    Server listen URL [default: http://127.0.0.1:8080] [env: LLAMA_MOCK_URL]
+  -u, --url <URL>    Server listen URL [default: http://127.0.0.1:9931] [env: LLAMA_MOCK_URL]
   -h, --help         Print help information
 ```
 
 | Flag | Long Flag | Description | Default |
 | :--- | :--- | :--- | :--- |
-| `-u <URL>` | `--url <URL>` | Server listen URL (overrides `LLAMA_MOCK_URL`) | `http://127.0.0.1:8080` |
+| `-u <URL>` | `--url <URL>` | Server listen URL (overrides `LLAMA_MOCK_URL`) | `http://127.0.0.1:9931` |
 | `-h` | `--help` | Print help information and exit | |
 
-Flag syntax supports standard POSIX and GNU conventions (e.g. `-u http://127.0.0.1:8080`, `-uhttp://127.0.0.1:8080`, `--url=http://127.0.0.1:8080`, bundled `-hu`, and `--` option delimiter).
+Flag syntax supports standard POSIX and GNU conventions (e.g. `-u http://127.0.0.1:9931`, `-uhttp://127.0.0.1:9931`, `--url=http://127.0.0.1:9931`, bundled `-hu`, and `--` option delimiter).
 
 ### Environment Configuration
 
@@ -332,7 +332,7 @@ The server supports configuration via environment variables:
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
-| `LLAMA_MOCK_URL` | `http://127.0.0.1:8080` | Server listen URL (`http://host:port` or `host:port`). |
+| `LLAMA_MOCK_URL` | `http://127.0.0.1:9931` | Server listen URL (`http://host:port` or `host:port`). |
 | `LLAMA_MOCK_LOAD_DELAY` | `1` | Artificial model loading latency in seconds. |
 | `LLAMA_MOCK_UNLOAD_DELAY` | `1` | Artificial model unloading latency in seconds. |
 | `RUST_LOG` | `info` | Logging verbosity filter (e.g., `debug`, `llama_dbusd_mock_llama=trace`, `warn`). |
@@ -343,23 +343,23 @@ Verify mock server operations directly from your terminal:
 
 ```bash
 # Check server health
-curl -s http://127.0.0.1:8080/health
+curl -s http://127.0.0.1:9931/health
 
 # Query available models and resident status
-curl -s http://127.0.0.1:8080/models | jq .
+curl -s http://127.0.0.1:9931/models | jq .
 
 # Trigger model load via chat completion
-curl -s -X POST http://127.0.0.1:8080/v1/chat/completions \
+curl -s -X POST http://127.0.0.1:9931/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"unsloth/Qwen3-0.6B-GGUF:Q4_K_XL","messages":[{"role":"user","content":"ping"}]}' | jq .
 
 # Evict model from memory
-curl -s -X POST http://127.0.0.1:8080/models/unload \
+curl -s -X POST http://127.0.0.1:9931/models/unload \
   -H "Content-Type: application/json" \
   -d '{"model":"unsloth/Qwen3-0.6B-GGUF:Q4_K_XL"}' | jq .
 
 # Tune load latency to 3 seconds at runtime
-curl -s -X POST http://127.0.0.1:8080/mock/loaddelay \
+curl -s -X POST http://127.0.0.1:9931/mock/loaddelay \
   -H "Content-Type: application/json" \
   -d '{"delay":3}' | jq .
 ```
