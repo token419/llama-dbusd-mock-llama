@@ -273,8 +273,8 @@ Our continuous integration and release pipeline validates builds across Linux, m
 
 | Target Triple | Operating System | Binary Output | Packaging |
 | :--- | :--- | :--- | :--- |
-| `x86_64-unknown-linux-gnu` | Linux (64-bit x86) | `llama-dbusd-mock-llama` | `.tar.gz` |
-| `aarch64-unknown-linux-gnu` | Linux (64-bit ARM) | `llama-dbusd-mock-llama` | `.tar.gz` |
+| `x86_64-unknown-linux-musl` | Linux (64-bit x86) | `llama-dbusd-mock-llama` | `.tar.gz` |
+| `aarch64-unknown-linux-musl` | Linux (64-bit ARM) | `llama-dbusd-mock-llama` | `.tar.gz` |
 | `x86_64-apple-darwin` | macOS (Intel 64-bit) | `llama-dbusd-mock-llama` | `.tar.gz` |
 | `aarch64-apple-darwin` | macOS (Apple Silicon) | `llama-dbusd-mock-llama` | `.tar.gz` |
 | `x86_64-pc-windows-msvc` | Windows (64-bit x86) | `llama-dbusd-mock-llama.exe` | `.zip` |

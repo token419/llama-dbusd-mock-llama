@@ -52,11 +52,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
+          - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            use_cross: false
+            use_cross: true
             bin: llama-dbusd-mock-llama
-          - target: aarch64-unknown-linux-gnu
+          - target: aarch64-unknown-linux-musl
             os: ubuntu-latest
             use_cross: true
             bin: llama-dbusd-mock-llama
@@ -141,7 +141,7 @@ jobs:
           mkdir -p "$RELEASE_DIR"
 
           # Package Linux & macOS tar.gz archives
-          for TARGET in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-apple-darwin aarch64-apple-darwin; do
+          for TARGET in x86_64-unknown-linux-musl aarch64-unknown-linux-musl x86_64-apple-darwin aarch64-apple-darwin; do
             STAGE_DIR="llama-dbusd-mock-llama-$TAG-$TARGET"
             mkdir -p "$STAGE_DIR"
 
